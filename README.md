@@ -9,7 +9,7 @@
 </div>
 
 <p float="left">
-	<img src="assets/1.gif" width="200" /> <img src="assets/2.gif" width="200" /> <img width="200" src="assets/3.gif"/> <img src="assets/4.gif" width="200" /> <img width="200" src="assets/5.gif"/>
+	<img src="assets/1.gif" width="190" /> <img src="assets/2.gif" width="190" /> <img width="190" src="assets/3.gif"/> <img src="assets/4.gif" width="190" /> <img width="190" src="assets/5.gif"/>
 	</p>
 
 ## Abstract
