@@ -1,11 +1,6 @@
 <div align="center">
 <h2><font color="red"> 🎥🎥🎥 DanceStyleCam 🎥🎥🎥 </font></center> <br> Style-Based 3D Multi-Style Dance Camera Movement Synthesis</h2>
 
-[//]: # (Xiaoying Huang, Sanyi Zhang, Qin Zhang, Xiaoxuan Guo and Long Ye)
-
-[//]: # (<a href='https://yccccm.github.io/FODGE-page/'><img src='https://img.shields.io/badge/Project-Page-Green'></a> )
-
-[//]: # (<a href=''><img src='https://img.shields.io/badge/ArXiv-0000.00000-red'></a> )
 </div>
 
 <p float="left">
@@ -44,6 +39,7 @@ The train and inference example build this repo was validated on:
 
 ### Download DCM Dataset and prepare for DanceStyleCam
 * Download and Check the DCM dataset.
+* Put ```music_style_16cat.json``` in ```DCM_data``` and ```DCM_data/split```,
 * Preprocess the data by running code.
 ```bash
 bash sh/data_preprocess_style.sh
