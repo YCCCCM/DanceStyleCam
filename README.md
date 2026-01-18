@@ -16,7 +16,7 @@
 Dance is an important connection of artistic expression, yet automatically creating new choreography especially music-driven high-fidelity dance generation still faces significant challenges. Existing approaches primarily enhance physical realism by optimizing foot–ground contact, but some local parts are still unsatisfactory which reduce expressiveness, such as overlook gliding steps (e.g., moonwalk), unnatural arm and head movements. To address these issues, we propose FODGE, a music-conditioned diffusion-based framework with full-body optimization. FODGE integrates a Full-body Refinement Block (FRB) and a Full-body Optimization Post-processing module (FOP). FRB introduces and learns the relationship between arm and foot movements as an optimization clue to refine human motions, thereby enhancing artistic expressiveness. And we further employ a training-free FOP to optimize the dance sequence from a full-body perspective, improving visualization effects. Experimental results demonstrate that FODGE significantly outperforms existing baselines in motion quality while achieving a better balance between physical plausibility and artistic expressiveness..</b>
 
 # Setup Environment
-Our method is trained using cuda12.1 on 5 Nvidia Geforce RTX3090 GPUs.
+Our method is trained using cuda 12.1 toolkit on 5 Nvidia Geforce RTX3090 GPUs.
 ``` 
 pip install requirements_5090_cu128.txt     # RTX3090 is OK
 ```
