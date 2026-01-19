@@ -16,7 +16,7 @@ Extensive experiments demonstrate that DanceStyleCam outperforms state-of-the-ar
 # Setup Environment
 Our method is trained using cuda 12.1 toolkit on 5 Nvidia Geforce RTX3090 GPUs.
 ``` 
-pip install requirements_5090_cu128.txt     # RTX3090 is OK
+pip install -r requirements_5090_cu128.txt     # RTX3090 is OK
 ```
 * We recommend Linux for performance and compatibility reasons. Windows is OK, please see `dsc_win.yaml`.
 * 64-bit Python 3.10
