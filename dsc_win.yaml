@@ -1,4 +1,4 @@
-name: dca
+name: dsc
 channels:
   - defaults
 dependencies:
@@ -120,5 +120,6 @@ dependencies:
       - wget==3.2
       - wheel==0.41.2
       - zipp==3.15.0
-prefix: C:\Users\your_name\anaconda3\envs\dca
+prefix: C:\Users\your_name\anaconda3\envs\dsc
+
 
