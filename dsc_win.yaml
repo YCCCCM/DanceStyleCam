@@ -121,4 +121,4 @@ dependencies:
       - wheel==0.41.2
       - zipp==3.15.0
 prefix: C:\Users\your_name\anaconda3\envs\dca
-#prefix: C:\Users\74716\anaconda3\envs\dca
+
