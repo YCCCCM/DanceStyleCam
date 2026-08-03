@@ -1,0 +1,19 @@
+experiment:
+  name: dsc_test_pre
+  seed: 42
+
+data:
+  config: configs/data/dcm_style_pp.yaml
+  split: test
+
+checkpoints:
+  ckd: checkpoints/DSC_CKD.pt
+  cs: checkpoints/DSC_CS.pt
+
+generation:
+  output_root: generation
+  device: auto
+  checkpoint_weights: model
+  checkpoint_style_vocabulary: legacy_dsc_v1
+  save_camera_npy: true
+  save_camera_json: false

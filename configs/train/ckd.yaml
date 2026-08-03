@@ -1,0 +1,33 @@
+experiment:
+  name: dsc_ckd
+  seed: 42
+
+data:
+  config: configs/data/dcm_style_pp.yaml
+  split: train
+
+model:
+  stage: ckd
+  history_len: 60
+  inference_len: 60
+  latent_dim: 512
+  ff_size: 1024
+  num_layers: 8
+  num_heads: 8
+  dropout: 0.1
+
+training:
+  output_root: runs
+  resume_checkpoint: null
+  epochs: 1500
+  batch_size: 1024
+  num_workers: 8
+  drop_last: true
+  learning_rate: 0.0002
+  weight_decay: 0.02
+  positive_weight: 2.0
+  negative_weight: 0.5
+  ema_decay: 0.9999
+  ema_interval: 1
+  save_every: 300
+  max_steps_per_epoch: null

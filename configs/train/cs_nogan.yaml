@@ -1,0 +1,10 @@
+base_config: cs.yaml
+
+experiment:
+  name: dsc_cs_nogan
+
+training:
+  use_gan: false
+  epochs: 1500
+  batch_size: 1024
+  save_every: 300

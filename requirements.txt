@@ -1,0 +1,19 @@
+# Install a PyTorch build matching the local CUDA runtime first when needed.
+numpy>=1.23,<2.0
+PyYAML>=6.0
+torch>=2.3
+einops>=0.6
+accelerate>=0.28
+wandb>=0.16
+
+# Dataset preparation
+librosa>=0.10
+scipy>=1.10
+soundfile>=0.12
+tqdm>=4.65
+
+# Visualization
+imageio>=2.31
+imageio-ffmpeg>=0.4.9
+matplotlib>=3.7
+opencv-python>=4.7

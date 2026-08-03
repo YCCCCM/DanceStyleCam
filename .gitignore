@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+
+# Downloaded public DCM data. Metadata JSON files remain tracked.
+DCM_data/amc_raw_data/
+DCM_data/amc_camera_json/
+DCM_data/Simplified_MotionGlobalTransform/
+
+# Rebuildable dataset and runtime artifacts.
+DCM-style++/*
+!DCM-style++/README.md
+runs/*
+!runs/README.md
+generation/*
+!generation/README.md
+checkpoints/*
+!checkpoints/README.md

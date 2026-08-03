@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dancestylecam"
+version = "0.1.0"
+description = "Official implementation of DanceStyleCam"
+requires-python = ">=3.10"
+dependencies = [
+  "einops>=0.6",
+  "numpy>=1.23,<2.0",
+  "PyYAML>=6.0",
+  "torch>=2.3",
+]
+
+[project.optional-dependencies]
+data = [
+  "librosa>=0.10",
+  "scipy>=1.10",
+  "soundfile>=0.12",
+  "tqdm>=4.65",
+]
+visualization = [
+  "imageio>=2.31",
+  "imageio-ffmpeg>=0.4.9",
+  "matplotlib>=3.7",
+  "opencv-python>=4.7",
+]
+dev = [
+  "pytest>=7.4",
+  "ruff>=0.5",
+]
+training = [
+  "accelerate>=0.28",
+  "wandb>=0.16",
+]
+
+[tool.setuptools.packages.find]
+include = ["common*", "data*", "infer*", "metric*", "models*", "tools*", "train*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120

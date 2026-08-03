@@ -16,7 +16,7 @@ Extensive experiments demonstrate that DanceStyleCam outperforms state-of-the-ar
 # Setup Environment
 Our method is trained using cuda 12.1 toolkit on 5 Nvidia Geforce RTX3090 GPUs.
 ``` 
-pip install -r requirements_5090_cu128.txt     # RTX3090 is OK
+pip install -r requirements.txt     # RTX3090 is OK
 ```
 * We recommend Linux for performance and compatibility reasons. Windows is OK, please see `dsc_win.yaml`.
 * 64-bit Python 3.10
@@ -42,12 +42,12 @@ The train and inference example build this repo was validated on:
 * Put ```music_style_16cat.json``` in ```DCM_data``` and ```DCM_data/split```,
 * Preprocess the data by running code.
 ```bash
-bash sh/data_preprocess_style.sh
+python tools/data/prepare_dcm_style_pp.py --config configs/data/dcm_style_pp.yaml
 ```
 
 * Make DCM++ dataset which is keyframe-aware by running
 ```bash
-bash sh/make_dcm_plusplus_style.sh
+python tools/data/prepare_dcm_style_pp.py --config configs/data/dcm_style_pp.yaml
 ```
 
 The dataset file structure is as follows:
@@ -72,55 +72,52 @@ DanceStyleCam
 * Put the downloaded checkpoints under `checkpoints` folder and rename them as `DSC_CKD.pt` and `DSC_CS.pt`.
 * synthesis keyframe information with CKD model by running
 ```.bash
-bash sh/test_ckd.sh
+python infer/generate.py --config configs/infer/default.yaml
 ```
 
 * synthesis camera movement with CS model (given keyframe information from CKD model)
 ```.bash
-bash sh/test_cs.sh
+python infer/generate.py --config configs/infer/default.yaml
 ```
 
 ## Evaluate
 * Evaluation of quantitative results of synthesis and quantitative results of style consistency
 ```.bash
-bash sh/evaluate.sh
-bash sh/evaluate_style.sh
+python tools/eval/run_benchmark.py --config configs/eval/benchmark.yaml --input generation/<run-name>
 ```
 
 ## Model Training
 Training the Camera Keyframe Detection model
 ```bash
-bash sh/train_ckd.sh
+python train/train_ckd.py --config configs/train/ckd.yaml
 ```
 
 Training the Camera Synthesis model
 ```bash
-bash sh/train_cs.sh
+python train/train_cs.py --config configs/train/cs.yaml
 ```
 
 ## Visualization and Render
 ### Visualization I
 Once the training is done, run inference and render:
 ```bash
-bash sh/render.sh
+python tools/visualization/visualize.py --config configs/visualization/default.yaml --input generation/<run-name>
 ```
 
 ### Visualization II
 * If you want to experience better visualization, convert the results to `.vmd` format that can be viewed in [Saba_Viewer] by running
 
 ```.bash
-bash sh/extend_camera_results.sh
-bash sh/merge_camera_json.sh
-bash sh/json2vmd.sh
+python tools/visualization/export_vmd.py --input generation/<run-name>
 ```
 
 # Citation 
 If you think this project is helpful, please cite our paper:
 ```bibtex
-@inproceedings{2026dsc,
+@inproceedings{huang2026dsc,
   title={DanceStyleCam: Style-Based 3D Multi-Style Dance Camera Movement Synthesis},
-  author={},
-  booktitle={underview},
+  author={Xiaoying Huang},
+  booktitle={2026 IJCAI},
   year={2026},
 }
 ``` 

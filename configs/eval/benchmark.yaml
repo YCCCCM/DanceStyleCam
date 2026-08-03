@@ -1,0 +1,8 @@
+data:
+  config: configs/data/dcm_style_pp.yaml
+
+evaluation:
+  output_subdir: metrics
+  benchmark: true
+  style_consistency: true
+  diversity_block_size: 2048

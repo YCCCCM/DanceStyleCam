@@ -1,0 +1,9 @@
+data:
+  config: configs/data/dcm_style_pp.yaml
+
+visualization:
+  fps: 30
+  width: 1280
+  height: 720
+  include_audio: false
+  output_subdir: vis

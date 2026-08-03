@@ -1,0 +1,30 @@
+schema_version: 1
+
+paths:
+  raw_root: DCM_data
+  processed_root: DCM-style++
+  style_file: DCM_data/music_style_16cat.json
+  segment_file: DCM_data/split/long2short.json
+  train_split: DCM_data/split/train_pre.json
+  test_split: DCM_data/split/test_pre.json
+
+processing:
+  fps: 30
+  alignment_policy: legacy_v1
+  sequence_ids: null
+  overwrite: false
+  resume: true
+
+storage:
+  format: npy
+  dtype: float32
+  copy_audio: false
+
+dataset:
+  history_len: 60
+  inference_len: 60
+  merge_adjacent_train: true
+  music_feature_mode: legacy_clip
+  style_vocabulary: canonical_v1
+  ckd_train_stride: 15
+  ckd_test_stride: 60
