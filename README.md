@@ -80,6 +80,13 @@ python infer/generate.py --config configs/infer/default.yaml
 python infer/generate.py --config configs/infer/default.yaml
 ```
 
+* controllable inference on the test split or custom MMD dance and music
+```bash
+python infer/generate_test_controlled.py --config configs/infer/controlled_test.yaml
+python infer/generate_custom.py --config configs/infer/custom.yaml --dance input/dance.vmd --pmx input/model.pmx --music input/music.wav
+```
+Control file formats are documented in [docs/CONTROLLABLE_INFERENCE.md](docs/CONTROLLABLE_INFERENCE.md).
+
 ## Evaluate
 * Evaluation of quantitative results of synthesis and quantitative results of style consistency
 ```.bash

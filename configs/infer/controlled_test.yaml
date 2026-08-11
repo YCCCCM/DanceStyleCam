@@ -1,0 +1,11 @@
+base_config: default.yaml
+
+experiment:
+  name: dsc_controlled_test
+
+# Null values preserve the default pipeline: CKD-generated temporal
+# keyframes, CS-generated camera parameters, and dataset style annotations.
+controls:
+  temporal: null
+  spatio_temporal: null
+  style: null

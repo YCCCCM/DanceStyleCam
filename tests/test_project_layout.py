@@ -15,9 +15,13 @@ def test_public_metadata_is_present() -> None:
         "configs/train/cs.yaml",
         "configs/train/cs_nogan.yaml",
         "configs/infer/default.yaml",
+        "configs/infer/controlled_test.yaml",
+        "configs/infer/custom.yaml",
         "train/train_ckd.py",
         "train/train_cs.py",
         "infer/generate.py",
+        "infer/generate_test_controlled.py",
+        "infer/generate_custom.py",
     )
     assert all((PROJECT_ROOT / path).is_file() for path in required)
 
