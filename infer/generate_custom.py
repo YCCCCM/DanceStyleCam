@@ -121,6 +121,10 @@ DCM_BONES = (
 PARENT: dict[str, str | None] = {
     "\u5168\u3066\u306e\u89aa": None,
     "\u30bb\u30f3\u30bf\u30fc": "\u5168\u3066\u306e\u89aa",
+    "\u5de6\u8db3\uff29\uff2b": "\u5168\u3066\u306e\u89aa",
+    "\u53f3\u8db3\uff29\uff2b": "\u5168\u3066\u306e\u89aa",
+    "\u5de6\u3064\u307e\u5148\uff29\uff2b": "\u5de6\u8db3\uff29\uff2b",
+    "\u53f3\u3064\u307e\u5148\uff29\uff2b": "\u53f3\u8db3\uff29\uff2b",
     "\u30b0\u30eb\u30fc\u30d6": "\u30bb\u30f3\u30bf\u30fc",
     "\u8170": "\u30b0\u30eb\u30fc\u30d6",
     "\u4e0b\u534a\u8eab": "\u8170",
@@ -206,6 +210,13 @@ FK_BONES = (
     "\u53f3\u624b\u6369",
     "\u53f3\u624b\u9996",
     *DCM_BONES[45:60],
+)
+
+IK_BONES = (
+    "\u5de6\u8db3\uff29\uff2b",
+    "\u53f3\u8db3\uff29\uff2b",
+    "\u5de6\u3064\u307e\u5148\uff29\uff2b",
+    "\u53f3\u3064\u307e\uff29\uff2b",
 )
 
 CORE_PMX_BONES = (
@@ -487,6 +498,55 @@ def _quaternion_rotate(quaternion: np.ndarray, vector: np.ndarray) -> np.ndarray
     ).astype(np.float32)
 
 
+def _descendants(root: str, bones: tuple[str, ...]) -> list[str]:
+    result: list[str] = []
+    for candidate in bones:
+        parent = PARENT.get(candidate)
+        while parent is not None:
+            if parent == root:
+                result.append(candidate)
+                break
+            parent = PARENT.get(parent)
+    return result
+
+
+def _rotation_between(source: np.ndarray, target: np.ndarray) -> np.ndarray:
+    source_norm = np.linalg.norm(source, axis=-1, keepdims=True)
+    target_norm = np.linalg.norm(target, axis=-1, keepdims=True)
+    source_unit = source / np.maximum(source_norm, 1e-8)
+    target_unit = target / np.maximum(target_norm, 1e-8)
+    cross = np.cross(source_unit, target_unit)
+    sine = np.linalg.norm(cross, axis=-1, keepdims=True)
+    cosine = np.sum(source_unit * target_unit, axis=-1, keepdims=True)
+    axis = cross / np.maximum(sine, 1e-8)
+    half_angle = 0.5 * np.arctan2(sine, cosine)
+    quaternion = np.concatenate((axis * np.sin(half_angle), np.cos(half_angle)), axis=-1)
+    quaternion[sine[:, 0] < 1e-6] = IDENTITY_QUATERNION
+    return _normalize_quaternion(quaternion)
+
+
+def _apply_leg_ik(
+    global_position: dict[str, np.ndarray],
+    global_rotation: dict[str, np.ndarray],
+    target_name: str,
+    end_name: str,
+    links: tuple[str, ...],
+    bones: tuple[str, ...],
+) -> None:
+    if target_name not in global_position:
+        return
+    target = global_position[target_name]
+    descendants = {link: _descendants(link, bones) + [link] for link in links}
+    for _ in range(6):
+        for link in links:
+            joint = global_position[link]
+            delta = _rotation_between(global_position[end_name] - joint, target - joint)
+            for descendant in descendants[link]:
+                offset = global_position[descendant] - joint
+                global_position[descendant] = joint + _quaternion_rotate(delta, offset)
+                global_rotation[descendant] = _quaternion_multiply(delta, global_rotation[descendant])
+
+
 def _rest_position(rest: Mapping[str, np.ndarray], bone: str | None) -> np.ndarray:
     current = bone
     while current is not None:
@@ -506,7 +566,8 @@ def motion180_from_vmd(vmd_path: str | Path, pmx_path: str | Path, frames: int |
     global_rotation: dict[str, np.ndarray] = {}
     zeros = np.zeros((output_frames, 3), dtype=np.float32)
     identity = np.repeat(IDENTITY_QUATERNION[None, :], output_frames, axis=0)
-    for bone in FK_BONES:
+    all_bones = (*FK_BONES, *IK_BONES)
+    for bone in all_bones:
         local_position, local_rotation = dense_bone_motion(motion.bones.get(bone, []), output_frames)
         parent = PARENT.get(bone)
         parent_position = global_position.get(parent, zeros)
@@ -517,6 +578,24 @@ def motion180_from_vmd(vmd_path: str | Path, pmx_path: str | Path, frames: int |
             local_position + rest_offset[None, :],
         )
         global_rotation[bone] = _quaternion_multiply(parent_rotation, local_rotation)
+    if motion.bones.get("\u5de6\u8db3\uff29\uff2b"):
+        _apply_leg_ik(
+            global_position,
+            global_rotation,
+            "\u5de6\u8db3\uff29\uff2b",
+            "\u5de6\u8db3\u9996",
+            ("\u5de6\u3072\u3056", "\u5de6\u8db3"),
+            all_bones,
+        )
+    if motion.bones.get("\u53f3\u8db3\uff29\uff2b"):
+        _apply_leg_ik(
+            global_position,
+            global_rotation,
+            "\u53f3\u8db3\uff29\uff2b",
+            "\u53f3\u8db3\u9996",
+            ("\u53f3\u3072\u3056", "\u53f3\u8db3"),
+            all_bones,
+        )
     return np.stack([global_position[bone] for bone in DCM_BONES], axis=1).reshape(output_frames, 180)
 
 

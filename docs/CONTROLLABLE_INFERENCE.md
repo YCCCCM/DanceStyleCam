@@ -44,7 +44,8 @@ python infer/generate_custom.py \
 
 VMD stores local bone animation but does not store the model's rest skeleton.
 A matching PMX is therefore required for VMD input. The converter interpolates
-the sparse VMD records at 30 FPS, performs PMX forward kinematics, and writes
+the sparse VMD records at 30 FPS, performs PMX forward kinematics, applies a
+lightweight two-leg CCD solve when `左/右足ＩＫ` tracks are present, and writes
 the fixed DCM 60-bone order. The selected PMX determines character proportions.
 
 The `--dance` input can alternatively be one of these already-converted forms:
