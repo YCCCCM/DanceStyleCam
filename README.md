@@ -68,7 +68,7 @@ DanceStyleCam
 ```
 
 ## Model Test
-* Download our trained checkpoints.
+* Contact the first author to obtain a link to download our trained checkpoints.
 * Put the downloaded checkpoints under `checkpoints` folder and rename them as `DSC_CKD.pt` and `DSC_CS.pt`.
 * synthesis keyframe information with CKD model by running
 ```.bash
@@ -96,12 +96,12 @@ python tools/eval/run_benchmark.py --config configs/eval/benchmark.yaml --input 
 ## Model Training
 Training the Camera Keyframe Detection model
 ```bash
-python train/train_ckd.py --config configs/train/ckd.yaml
+CUDA_VISIBLE_DEVICES=0,1 accelerate launch --multi_gpu --num_processes 2 train/train_ckd.py --config configs/train/ckd.yaml
 ```
 
 Training the Camera Synthesis model
 ```bash
-python train/train_cs.py --config configs/train/cs.yaml
+CUDA_VISIBLE_DEVICES=0,1 accelerate launch --multi_gpu --num_processes 2 train/train_cs.py --config configs/train/cs.yaml
 ```
 
 ## Visualization and Render
