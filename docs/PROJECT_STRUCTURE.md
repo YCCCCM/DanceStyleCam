@@ -35,13 +35,15 @@
 | --- | --- |
 | `schema.py` | 固定 NPY schema、30 FPS、camera20 字段和规范风格列表。 |
 | `raw_dcm.py` | 根据 sequence ID 定位 WAV、相机 JSON 和动作 JSON。 |
-| `audio_features.py` | 提取 35 维 AIST 音乐特征；支持完整序列存储和旧 DCM++ 的片段级精确兼容模式。 |
+| `audio_features.py` | 提取与 DCM++ 一致的 35 维 AIST 音乐特征。 |
+| `music_prepare.py` | 按当前 train/test JSON 预提取 clip 级 music35 NPY。 |
+| `music_store.py` | 读取和校验预提取的 clip 级 music35 NPY。 |
 | `camera_geometry.py` | 相机插值、坐标变换、camera20 和 bone mask 计算。 |
 | `prepare.py` | `DCM_data -> DCM-style++` 转换实现，支持原子写入、校验和与断点续做。 |
 | `validate.py` | 校验原始文件、NPY shape/dtype/checksum、manifest 和 split 范围。 |
 | `store.py` | 通过 `np.load(..., mmap_mode="r")` 按需读取完整序列 NPY。 |
-| `splits.py` | 读取 `train_pre/test_pre/long2short`，构建不复制数据的虚拟 clip。 |
-| `style_labels.py` | 读取 16 类标注，并显式管理规范顺序与公开 checkpoint 历史顺序。 |
+| `splits.py` | 读取 `train/test/long2short`，构建不复制数据的虚拟 clip。 |
+| `style_labels.py` | 读取 16 类标注，并使用 DSC checkpoint 的固定顺序。 |
 | `normalization.py` | 按训练 split 计算和保存小型 min-max 统计量。 |
 | `dataset_common.py` | Dataset 上下文、零填充窗口和公共切片逻辑。 |
 | `ckd_dataset.py` | 动态 CKD 滑窗，不写 pickle 或窗口级 NPY。 |
@@ -101,8 +103,9 @@
 | 文件 | 作用 |
 | --- | --- |
 | `data/prepare_dcm_style_pp.py` | 数据转换命令入口。 |
+| `data/prepare_music_features.py` | 当前 split 的 music35 预提取命令入口。 |
+| `data/compose_training_split.py` | 合并 Train、Validation 和固定 Test 子集的训练 JSON。 |
 | `data/validate_dcm_style_pp.py` | 数据校验命令入口。 |
-| `data/compare_legacy_dcmpp.py` | 将 NPY/虚拟片段逐字段与已有旧 DCM++ 比较，输出 JSON 报告。 |
 | `visualization/visualize.py` | 读取 camera20 和动作 NPY，在同一 run 中创建 `vis/`。 |
 | `visualization/export_vmd.py` | 将 camera20 转成 VMD，在同一 run 中创建 `vmd/`。 |
 | `visualization/vmd.py` | 无额外项目依赖的 VMD camera writer。 |
@@ -114,8 +117,10 @@
 | --- | --- |
 | `data/dcm_style_pp.yaml` | 原始目录、NPY 目录、标注、split 和动态窗口设置。 |
 | `train/ckd.yaml` | 公开 CKD 1500-epoch 配置。 |
+| `train/ckd_dca_split.yaml` | DCA 原始无交叉 405 条 Train / 49 条 Test 协议的 CKD 配置。 |
 | `train/cs.yaml` | 公开 GAN CS 1200-epoch 配置。 |
 | `train/cs_nogan.yaml` | 继承 CS 配置并关闭 D 的 no-GAN 配置。 |
+| `train/cs_nogan_dca_split.yaml` | DCA 原始无交叉协议的 no-GAN CS 配置。 |
 | `infer/default.yaml` | 公开 CKD/CS 权重和 test split 推理配置。 |
 | `infer/controlled_test.yaml` | test split 三类可控推理配置。 |
 | `infer/custom.yaml` | 自定义舞蹈、音乐和可选控制推理配置。 |
@@ -125,13 +130,12 @@
 ## 数据与运行产物
 
 `DCM-style++/manifest.json` 只记录稳定数值数据：schema、帧数、dtype、相对路径和
-checksum。它不记录 style 或 split。更改 `music_style_16cat.json`、`train_pre.json` 或
-`test_pre.json` 后无需重新预处理。
+checksum。它不记录 style 或 split。更改 `music_style_16cat.json`、`train.json` 或
+`test.json` 后无需重新预处理。
 
-`music35/` 中的 NPY 是完整序列表示。默认 `dataset.music_feature_mode: legacy_clip` 会在
-内存中按虚拟片段从 `DCM_data` 音频提取音乐特征，以复现旧 DCM++ “先裁 WAV、再提特征”
-的边界和 beat 行为；结果使用进程内缓存，不写 split 专属文件。若只需要更快的完整序列
-切片，可显式使用 `sequence_npy`，但该模式不保证片段边界处与旧版逐值一致。
+music35 由 `prepare_music_features.py` 固定到 `music35/clips/`。命令会优先导入已有
+DCM++ `aist_feats_long`，只对缺失的合并片段提取一次；训练和推理仅使用这些 NPY。修改
+split 后重新运行该命令即可增量补齐新增片段。
 
 ```text
 generation/<run-name>/

@@ -2,17 +2,20 @@
 
 验证日期：2026-08-03。
 
+本报告记录的是当时的 415/49 迁移验证分割，不代表当前默认训练协议。当前默认恢复为
+原始互不交叉的 `train.json`/`validation.json`/`test.json`，数量分别为 362/49/43。
+
 ## 全量 DCM-style++
 
 - 从公开 DCM 结构生成 108 个完整序列、344,015 帧、540 个 NPY 文件。
 - 数据目录总大小约 330 MB；旧 `DanceStyleCam/DCM++` 为 30 GB。
 - `validate_dcm_style_pp.py` 检查 schema、shape、dtype、checksum、manifest 和 split 引用，
   最终 `issues: []`。
-- `train_pre.json`/`test_pre.json` 只在运行时解析，manifest 不包含 split 或 style 分配。
+- `train.json`/`test.json` 只在运行时解析，manifest 不包含 split 或 style 分配。
 
 ## 与旧 DCM++ 的逐值比较
 
-使用 `tools/data/compare_legacy_dcmpp.py` 比较旧 DCM++ 中 154 个物理片段
+迁移验证比较 DCM++ 中 154 个物理片段
 （Train 105、Test 49）。在相机有效帧范围内结果如下：
 
 | 字段 | 通过片段 | 最大绝对误差 |
@@ -32,14 +35,14 @@
 旧训练缓存与新 Dataset 现场拟合的 MinMax 统计也逐值一致：CKD pose、CS pose、camera
 distance/position/rotation/FOV/eye 的 minimum 和 maximum 最大绝对误差均为 0。
 
-## 默认分割
+## 历史迁移验证分割
 
-当前 `train_pre.json`/`test_pre.json` 实际构建结果：
+当前 `train.json`/`test.json` 实际构建结果：
 
 | split | 虚拟片段 | CKD 窗口 | CS 窗口 | 插入关键帧 |
 | --- | ---: | ---: | ---: | ---: |
-| train | 145 | 18,437 | 24,587 | 997 |
-| test | 43 | 533 | 2,000 | 164 |
+| train | 105 | 21,005 | 28,546 | 1,153 |
+| test | 49 | 654 | 1,942 | 185 |
 
 ## 模型链路
 
@@ -48,7 +51,7 @@ distance/position/rotation/FOV/eye 的 minimum 和 maximum 最大绝对误差均
   显式选择。
 - 使用同一公开权重和同一随机输入比较原模型类与迁移模型类，CKD/CS 前向输出均
   `torch.equal == true`，最大绝对误差为 0。
-- `test_pre` 样本 `66_6` 完成 CKD -> CS 推理，输出 camera20 `(999, 20)` 和关键帧
+- `test` 样本完成 CKD -> CS 推理，输出 camera20 和关键帧
   `(999,)`；相机为 float32 且全部有限。CKD 输出不改写首尾，CS Dataset 按原协议在
   内存中补首尾关键帧。
 - 论文 benchmark 入口成功读取同一 NPY generation run 并生成指标报告。

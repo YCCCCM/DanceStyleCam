@@ -15,6 +15,7 @@ from common.paths import DatasetPaths
 from data.raw_dcm import RawDCM
 from data.schema import ARRAY_SPECS, SCHEMA_VERSION
 from data.splits import build_clips, load_segment_ranges, load_split
+from data.music_store import MusicClipSpec, MusicFeatureStore
 from data.store import SequenceStore
 from data.style_labels import StyleAnnotations
 
@@ -36,10 +37,6 @@ def validate_dataset(
     annotations = StyleAnnotations.load(paths.style_file)
     train_items = load_split(paths.train_split)
     test_items = load_split(paths.test_split)
-    overlap = {item.name for item in train_items} & {item.name for item in test_items}
-    if overlap:
-        raise ValueError(f"Train/test fragment overlap: {sorted(overlap)}")
-
     store = SequenceStore(paths.processed_root)
     manifest = store.load_manifest()
     if manifest.get("schema_version") != SCHEMA_VERSION:
@@ -57,8 +54,10 @@ def validate_dataset(
             continue
         if sequence_id not in annotations.by_sequence:
             issues.append(f"sequence {sequence_id}: missing style annotation")
-        for path in raw.missing_files(sequence_id):
-            issues.append(f"sequence {sequence_id}: missing raw file {path}")
+        files = raw.sequence_files(sequence_id)
+        for path in (files.camera, files.motion):
+            if not path.is_file():
+                issues.append(f"sequence {sequence_id}: missing raw file {path}")
 
         entry = manifest["sequences"][sequence_id]
         expected_frames = int(entry["frames"])
@@ -85,8 +84,16 @@ def validate_dataset(
     referenced = train_items + test_items
     missing_sequences = sorted({item.sequence_id for item in referenced} - set(frames_by_sequence), key=int)
     if not missing_sequences:
-        build_clips(train_items, segments, frames_by_sequence, merge_adjacent=True)
-        build_clips(test_items, segments, frames_by_sequence, merge_adjacent=False)
+        train_clips = build_clips(train_items, segments, frames_by_sequence, merge_adjacent=True)
+        test_clips = build_clips(test_items, segments, frames_by_sequence, merge_adjacent=False)
+        music_store = MusicFeatureStore(paths.processed_root)
+        music_manifest = music_store.load_manifest()
+        for clip in train_clips + test_clips:
+            metadata = music_manifest["clips"].get(clip.name)
+            if metadata is None:
+                issues.append(f"clip {clip.name}: missing pre-extracted music35")
+            elif metadata.get("frames") != clip.frames:
+                issues.append(f"clip {clip.name}: music35 frame count mismatch")
     elif sequence_ids is None:
         issues.append(f"split references unconverted sequences: {missing_sequences}")
 

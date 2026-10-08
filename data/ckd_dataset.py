@@ -54,7 +54,6 @@ class CKDDataset:
         if window.anchor - history <= clip_last < window.anchor + inference:
             keyframes[history + clip_last - window.anchor] = 1
 
-        audio_path = self.context.raw.sequence_files(clip.sequence_id).audio
         return {
             "camera_keyframe": keyframes[:, None].astype(np.int64),
             "padding_mask": valid[:, None],
@@ -62,8 +61,6 @@ class CKDDataset:
             "music": music.astype(np.float32, copy=False),
             "sample_id": clip.name,
             "sequence_id": clip.sequence_id,
-            "audio_path": str(audio_path),
-            "audio_start_frame": clip.start,
             "anchor_frame": clip.start + window.anchor,
         }
 

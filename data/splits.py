@@ -10,7 +10,7 @@ from pathlib import Path
 @dataclass(frozen=True)
 class SplitItem:
     name: str
-    legacy_category: str
+    category: str
     sequence_id: str
     segment_index: int | None
 
@@ -148,7 +148,7 @@ def music_frame_range(
     clip: ClipRef,
     segments: dict[str, list[tuple[int, int]]],
 ) -> tuple[int, int | None]:
-    """Return the legacy audio slice before camera-length truncation."""
+    """Return the DCM++ audio slice before camera-length truncation."""
 
     items = [SplitItem.parse(value) for value in clip.source_items]
     if len(items) == 1 and items[0].segment_index is None:

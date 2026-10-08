@@ -31,6 +31,7 @@ from infer.pipeline import (
     _tensor,
     _window_range,
     checkpoint_uses_ema,
+    ckd_normalizers_for_inference,
     infer_keyframes,
     polar8_to_camera20,
     resolve_device,
@@ -97,10 +98,11 @@ def _sample_payload(payload: Any, sample_id: str, sample_count: int) -> Any | No
 
 
 def _load_directory_payload(path: Path, sample_id: str) -> Any | None:
-    for suffix in (".npy", ".json"):
-        candidate = path / f"{sample_id}{suffix}"
-        if candidate.is_file():
-            return _read_control_file(candidate)
+    for stem in (sample_id, f"ck{sample_id}"):
+        for suffix in (".npy", ".json"):
+            candidate = path / f"{stem}{suffix}"
+            if candidate.is_file():
+                return _read_control_file(candidate)
     return None
 
 
@@ -127,12 +129,20 @@ def _binary_mask_or_frames(value: Any, total_frames: int) -> np.ndarray:
     if isinstance(value, Mapping):
         if "mask" in value:
             value = value["mask"]
+        elif "KeyframeMask" in value:
+            value = value["KeyframeMask"]
+        elif "keyframe_mask" in value:
+            value = value["keyframe_mask"]
         elif "frames" in value:
             value = value["frames"]
         elif "keyframes" in value:
             value = value["keyframes"]
+        elif "KeyframePos" in value:
+            value = value["KeyframePos"]
         else:
-            raise ValueError("Temporal JSON objects require `mask`, `frames`, or `keyframes`")
+            raise ValueError(
+                "Temporal JSON objects require `mask`, `frames`, `keyframes`, `KeyframeMask`, or `KeyframePos`"
+            )
     array = np.asarray(value)
     if array.ndim != 1:
         raise ValueError(f"Temporal control must be one-dimensional, got {array.shape}")
@@ -371,7 +381,7 @@ def run_controlled_test_generation(
     seed_everything(int(experiment.get("seed", 42)))
     device = resolve_device(str(generation.get("device", "auto")))
     use_ema = checkpoint_uses_ema(generation)
-    vocabulary = str(generation.get("checkpoint_style_vocabulary", "legacy_dsc_v1"))
+    vocabulary = str(generation.get("checkpoint_style_vocabulary", "dsc"))
     if style is not None:
         style = validate_style(style, vocabulary)
 
@@ -381,7 +391,7 @@ def run_controlled_test_generation(
     ckd_dataset = build_ckd_dataset(
         data_config,
         split,
-        normalizers=normalizers_from_checkpoint(ckd_checkpoint),
+        normalizers=ckd_normalizers_for_inference(ckd_checkpoint, generation),
     )
     frames_by_sample = _selected_clip_frames(ckd_dataset, selected)
     if selected is not None:

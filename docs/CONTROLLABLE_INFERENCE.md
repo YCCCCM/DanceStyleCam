@@ -25,8 +25,46 @@ python infer/generate_test_controlled.py \
 ```
 
 For multiple test clips, a JSON file maps clip ids to controls. A directory is
-also accepted; it may contain `<clip-id>.json` or `<clip-id>.npy` files. Clips
-without an entry retain the model-generated result and dataset style.
+also accepted; it may contain `<clip-id>.json` or `<clip-id>.npy` files.
+Stage1 files named `ck<clip-id>.json` are also
+accepted when they contain `KeyframeMask` or `KeyframePos`. Clips without an
+entry retain the model-generated result and dataset style.
+
+## Reproducible Stage1 Plans
+
+The default dataset configuration is the DSC protocol. `DCM-style++` contains
+compact derived NPY arrays, including pre-extracted clip-level music35. Training
+and test inference read these NPY files without loading audio.
+
+A Stage1 result can be retained as one `ck<clip-id>.json` per clip, or converted
+once to a portable NPY plan:
+
+```bash
+python tools/data/import_keyframes.py \
+  --config configs/data/dcm_style_pp.yaml \
+  --source <stage1-test-directory> \
+  --output controls/stage1-plan
+```
+
+Use the plan as temporal control when generating with the corresponding CS
+checkpoint:
+
+```bash
+python infer/generate_test_controlled.py \
+  --config configs/infer/controlled_test.yaml \
+  --temporal-control controls/stage1-plan
+```
+
+For comparison with the original evaluator, export the NPY result to its JSON
+layout and run the original `scripts/evaluate.py` with the original DCM++ test
+directory:
+
+```bash
+python tools/eval/export_dcm_json.py \
+  --input generation/<run-name> \
+  --data-config configs/data/dcm_style_pp.yaml \
+  --output /tmp/dsc-eval
+```
 
 ## Custom dance and music
 

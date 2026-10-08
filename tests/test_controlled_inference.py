@@ -33,6 +33,14 @@ def test_temporal_control_mapping_can_leave_samples_on_model_default(tmp_path) -
     assert set(controls) == {"clip_a"}
 
 
+def test_temporal_control_accepts_stage1_directory(tmp_path) -> None:
+    stage1 = tmp_path / "stage1"
+    stage1.mkdir()
+    (stage1 / "ckclip_a.json").write_text(json.dumps({"KeyframeMask": [1, 0, 0, 1]}), encoding="utf-8")
+    controls = load_temporal_controls(stage1, {"clip_a": 4})
+    assert controls["clip_a"].tolist() == [1, 0, 0, 1]
+
+
 def test_spatio_temporal_control_accepts_sparse_rows_and_joins_temporal_mask(tmp_path) -> None:
     camera_file = tmp_path / "camera.npy"
     rows = np.asarray(
@@ -70,8 +78,8 @@ def test_spatio_temporal_control_rejects_fractional_frames() -> None:
 
 
 def test_style_control_uses_complete_checkpoint_one_hot() -> None:
-    features = style_features("Choreography", "legacy_dsc_v1", 12)
-    assert validate_style("Cherography", "legacy_dsc_v1") == "Choreography"
+    features = style_features("Choreography", "dsc", 12)
+    assert validate_style("Cherography", "dsc") == "Choreography"
     assert features.shape == (12, 16)
     assert np.all(features.sum(axis=1) == 1)
     assert np.all(features.argmax(axis=1) == 10)

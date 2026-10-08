@@ -20,6 +20,7 @@ from common.config import load_config, require_mapping
 from common.paths import resolve_project_path
 from data.camera_geometry import detect_bone_mask
 from data.store import SequenceStore
+from data.dataset_common import clips_for_split
 from infer.result_io import GenerationRun
 from metric.features import (
     average_pairwise_distance,
@@ -194,6 +195,17 @@ def evaluate_run(config: dict[str, Any], input_root: str | Path) -> dict[str, An
     paths = require_mapping(data_config, "paths")
     store = SequenceStore(resolve_project_path(str(paths["processed_root"])))
     manifest = run.load_manifest()
+    sample_split = evaluation.get("sample_split")
+    if sample_split is not None:
+        expected = {clip.name for clip in clips_for_split(data_config, str(sample_split), store)}
+        actual = set(manifest["samples"])
+        if actual != expected:
+            raise ValueError(
+                "Generation samples do not match the configured test split: "
+                f"expected {len(expected)}, found {len(actual)}, "
+                f"missing {len(expected - actual)}, unexpected {len(actual - expected)}. "
+                "Regenerate with the current data configuration."
+            )
     records: dict[str, dict[str, Any]] = {}
     generated_kinetic: list[np.ndarray] = []
     reference_kinetic: list[np.ndarray] = []

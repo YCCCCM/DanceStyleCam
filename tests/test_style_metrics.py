@@ -3,7 +3,7 @@ import numpy as np
 from metric.evaluate import _style_metrics
 
 
-def test_style_metrics_include_all_legacy_summary_fields() -> None:
+def test_style_metrics_include_all_summary_fields() -> None:
     reference = [
         ("A", np.arange(30, dtype=np.float32)),
         ("B", np.arange(30, dtype=np.float32)[::-1]),

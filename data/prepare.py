@@ -12,7 +12,7 @@ import numpy as np
 
 from common.config import load_config, require_mapping
 from common.paths import DatasetPaths
-from data.audio_features import audio_frame_count, extract_music35_clip
+from data.audio_features import audio_frame_count
 from data.camera_geometry import (
     CameraAlignment,
     align_camera_keyframes,
@@ -40,8 +40,7 @@ def _empty_manifest() -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "fps": FPS,
-        "alignment_policy": "legacy_v1_last_camera_keyframe_excluded",
-        "music_feature_scope": "full_aligned_sequence",
+        "alignment_policy": "dcm_last_camera_keyframe_excluded",
         "arrays": _array_contract(),
         "sequences": {},
     }
@@ -87,8 +86,13 @@ def _load_or_create_manifest(root: Path) -> dict[str, Any]:
     manifest = _read_json(path)
     if manifest.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(f"Cannot resume unsupported DCM-style++ schema: {manifest.get('schema_version')}")
-    if manifest.get("arrays") != _array_contract():
-        raise ValueError("Cannot resume because the stored array contract has changed")
+    stored_arrays = manifest.get("arrays", {})
+    expected_arrays = _array_contract()
+    for name, value in expected_arrays.items():
+        if name in stored_arrays and stored_arrays[name] != value:
+            raise ValueError(f"Cannot resume because the stored {name} array contract has changed")
+    manifest["arrays"] = expected_arrays
+    manifest.pop("music_feature_scope", None)
     return manifest
 
 
@@ -144,18 +148,9 @@ def convert_sequence(raw: RawDCM, sequence_id: str) -> tuple[dict[str, np.ndarra
         alignment.output_frames,
     )
     bone_mask60 = detect_bone_mask(camera20, motion180)
-    music35 = extract_music35_clip(
-        files.audio,
-        start_frame=0,
-        end_frame=None,
-        output_frames=alignment.output_frames,
-        aligned_frame_limit=None if files.aligned_audio is not None else alignment.aligned_frame_limit,
-    )
-
     arrays = {
         "motion180": motion180.astype(np.float32, copy=False),
         "camera20": camera20.astype(np.float32, copy=False),
-        "music35": music35.astype(np.float32, copy=False),
         "keyframe_mask": keyframe_mask.astype(np.uint8, copy=False),
         "bone_mask60": bone_mask60.astype(np.uint8, copy=False),
     }
@@ -178,9 +173,6 @@ def prepare_dataset(config: dict[str, Any], sequence_ids: list[str] | None = Non
     processing = require_mapping(config, "processing")
     if int(processing.get("fps", FPS)) != FPS:
         raise ValueError(f"DanceStyleCam preprocessing currently requires {FPS} FPS")
-    if processing.get("alignment_policy", "legacy_v1") != "legacy_v1":
-        raise ValueError("Only the checkpoint-compatible `legacy_v1` alignment policy is supported")
-
     annotations = StyleAnnotations.load(paths.style_file)
     requested = sequence_ids if sequence_ids is not None else processing.get("sequence_ids")
     selected = list(annotations.by_sequence) if requested is None else [str(value) for value in requested]
@@ -192,6 +184,7 @@ def prepare_dataset(config: dict[str, Any], sequence_ids: list[str] | None = Non
     output_root = paths.processed_root
     output_root.mkdir(parents=True, exist_ok=True)
     manifest = _load_or_create_manifest(output_root)
+    _write_json_atomic(output_root / "manifest.json", manifest)
     resume = bool(processing.get("resume", True))
     overwrite = bool(processing.get("overwrite", False))
     if manifest["sequences"] and not resume and not overwrite:

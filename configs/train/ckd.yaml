@@ -19,11 +19,11 @@ model:
 training:
   output_root: runs
   resume_checkpoint: null
-  epochs: 1500
+  epochs: 3000
   batch_size: 1024
   num_workers: 8
   drop_last: true
-  learning_rate: 0.0002
+  learning_rate: 0.0004
   weight_decay: 0.02
   positive_weight: 2.0
   negative_weight: 0.5

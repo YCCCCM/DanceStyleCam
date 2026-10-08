@@ -3,6 +3,9 @@ base_config: default.yaml
 experiment:
   name: dsc_custom
 
+generation:
+  ckd_normalization: checkpoint
+
 input:
   sample_id: custom
   dance: null

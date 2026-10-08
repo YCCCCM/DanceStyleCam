@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 import numpy as np
 
-from .dataset_common import DatasetContext, build_context, padded_window
+from .dataset_common import DatasetContext, build_context, cs_fragment_start_clips, padded_window
+from .music_store import MusicFeatureStore
 from .normalization import NormalizerBundle
 
 
@@ -42,8 +43,10 @@ class CSDataset:
         self,
         context: DatasetContext,
         generated_keyframe_masks: dict[str, np.ndarray] | None = None,
+        prefix_frames_by_clip: dict[int, int] | None = None,
     ) -> None:
         self.context = context
+        self.prefix_frames_by_clip = {} if prefix_frames_by_clip is None else prefix_frames_by_clip
         self.windows: list[CSWindow] = []
         self.subsequence_end_index: list[int] = []
         for clip_index, clip in enumerate(context.clips):
@@ -57,9 +60,12 @@ class CSDataset:
                     raise ValueError(f"Generated keyframe mask length mismatch for {clip.name}")
             positions, inserted = _keyframe_positions(mask, context.inference_len)
             for keyframe_index, keyframe in enumerate(positions):
+                if keyframe >= self.prefix_frames_by_clip.get(clip_index, clip.frames):
+                    continue
                 next_keyframe = positions[keyframe_index + 1] if keyframe_index + 1 < len(positions) else None
                 self.windows.append(CSWindow(clip_index, keyframe, next_keyframe, inserted[keyframe_index]))
             self.subsequence_end_index.append(len(self.windows))
+        self.start_window_count = sum(window.clip_index in self.prefix_frames_by_clip for window in self.windows)
 
     @property
     def normalizers(self) -> NormalizerBundle:
@@ -105,7 +111,6 @@ class CSDataset:
         suffix_padding = max(0, inference - available)
         style = self.context.annotations.one_hot(clip.sequence_id, self.context.style_vocabulary)
         style_features = np.repeat(style[None, :], history + inference, axis=0)
-        audio_path = self.context.raw.sequence_files(clip.sequence_id).audio
         return {
             "camera": camera_normalized.astype(np.float32, copy=False),
             "camera_inference_mask": inference_mask[:, None],
@@ -115,8 +120,6 @@ class CSDataset:
             "style": style_features,
             "sample_id": clip.name,
             "sequence_id": clip.sequence_id,
-            "audio_path": str(audio_path),
-            "audio_start_frame": clip.start,
             "pre_padding": pre_padding,
             "suffix_padding": suffix_padding,
             "start_frame": max(0, window.keyframe - history),
@@ -133,12 +136,26 @@ def build_cs_dataset(
     generated_keyframe_masks: dict[str, np.ndarray] | None = None,
     style_vocabulary: str | None = None,
 ) -> CSDataset:
-    return CSDataset(
-        build_context(
-            config,
-            split,
-            normalizers=normalizers,
-            style_vocabulary=style_vocabulary,
-        ),
-        generated_keyframe_masks=generated_keyframe_masks,
+    context = build_context(
+        config,
+        split,
+        normalizers=normalizers,
+        style_vocabulary=style_vocabulary,
     )
+    prefix_frames_by_clip = {}
+    if split == "train":
+        start_clips = cs_fragment_start_clips(config, context.store)
+        if start_clips:
+            count = len(context.clips)
+            prefix_frames = int(config["dataset"]["cs_start_window_frames"])
+            prefix_frames_by_clip = {count + index: prefix_frames for index in range(len(start_clips))}
+            music_store = MusicFeatureStore(context.store.root)
+            context = replace(
+                context,
+                clips=[*context.clips, *start_clips],
+                music_by_clip={
+                    **context.music_by_clip,
+                    **{clip.name: music_store.load_clip(clip) for clip in start_clips},
+                },
+            )
+    return CSDataset(context, generated_keyframe_masks, prefix_frames_by_clip)

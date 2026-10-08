@@ -10,10 +10,9 @@ import numpy as np
 from common.config import require_mapping
 from common.paths import DatasetPaths
 
-from .audio_features import extract_music35_clip
+from .music_store import MusicFeatureStore
 from .normalization import NormalizerBundle, fit_normalizers
-from .raw_dcm import RawDCM
-from .splits import ClipRef, build_clips, load_segment_ranges, load_split, music_frame_range
+from .splits import ClipRef, build_clips, load_segment_ranges, load_split
 from .store import SequenceStore
 from .style_labels import StyleAnnotations
 
@@ -21,19 +20,15 @@ from .style_labels import StyleAnnotations
 @dataclass(frozen=True)
 class DatasetContext:
     store: SequenceStore
-    raw: RawDCM
     annotations: StyleAnnotations
     clips: list[ClipRef]
     normalizers: NormalizerBundle
     history_len: int
     inference_len: int
     style_vocabulary: str
-    music_by_clip: dict[str, np.ndarray] | None = None
+    music_by_clip: dict[str, np.ndarray]
 
     def music_window(self, clip: ClipRef, anchor: int) -> np.ndarray:
-        if self.music_by_clip is None:
-            value = self.store.load(clip.sequence_id, "music35")
-            return padded_window(value, clip, anchor, self.history_len, self.inference_len)[0]
         value = self.music_by_clip[clip.name]
         local_clip = ClipRef(clip.name, clip.sequence_id, 0, clip.frames, clip.source_items)
         return padded_window(value, local_clip, anchor, self.history_len, self.inference_len)[0]
@@ -51,6 +46,21 @@ def clips_for_split(config: dict[str, Any], split: str, store: SequenceStore) ->
     return build_clips(items, segments, frames, merge_adjacent=merge)
 
 
+def cs_fragment_start_clips(config: dict[str, Any], store: SequenceStore) -> list[ClipRef]:
+    dataset_config = require_mapping(config, "dataset")
+    frames = int(dataset_config.get("cs_start_window_frames", 0))
+    if frames < 0 or frames > int(dataset_config.get("history_len", 60)):
+        raise ValueError("cs_start_window_frames must be between zero and history_len")
+    if frames == 0:
+        return []
+    fragment_config = {
+        **config,
+        "dataset": {**dataset_config, "merge_adjacent_train": False},
+    }
+    existing = set(clips_for_split(config, "train", store))
+    return [clip for clip in clips_for_split(fragment_config, "train", store) if clip not in existing]
+
+
 def build_context(
     config: dict[str, Any],
     split: str,
@@ -64,36 +74,13 @@ def build_context(
     if normalizers is None:
         train_clips = clips if split == "train" else clips_for_split(config, "train", store)
         normalizers = fit_normalizers(store, train_clips)
-    raw = RawDCM(paths.raw_root)
-    music_by_clip: dict[str, np.ndarray] | None = None
-    music_feature_mode = str(dataset_config.get("music_feature_mode", "sequence_npy"))
-    if music_feature_mode == "legacy_clip":
-        music_by_clip = {}
-        segments = load_segment_ranges(paths.segment_file)
-        for position, clip in enumerate(clips, start=1):
-            files = raw.sequence_files(clip.sequence_id)
-            audio_path = files.audio
-            audio_start, audio_end = music_frame_range(clip, segments)
-            aligned_frame_limit = (
-                None
-                if files.aligned_audio is not None
-                else int(store.load_manifest()["sequences"][clip.sequence_id]["aligned_frame_limit"])
-            )
-            music_by_clip[clip.name] = extract_music35_clip(
-                audio_path,
-                audio_start,
-                audio_end,
-                clip.frames,
-                aligned_frame_limit=aligned_frame_limit,
-            )
-            if position == 1 or position % 10 == 0 or position == len(clips):
-                print(f"Extracted legacy music features for {position}/{len(clips)} clips", flush=True)
-    elif music_feature_mode != "sequence_npy":
-        raise ValueError(f"Unsupported music feature mode: {music_feature_mode}")
+    music_by_clip: dict[str, np.ndarray] = {}
+    music_store = MusicFeatureStore(paths.processed_root)
+    for clip in clips:
+        music_by_clip[clip.name] = music_store.load_clip(clip)
 
     return DatasetContext(
         store=store,
-        raw=raw,
         annotations=StyleAnnotations.load(paths.style_file),
         clips=clips,
         normalizers=normalizers,
@@ -102,7 +89,7 @@ def build_context(
         style_vocabulary=(
             style_vocabulary
             if style_vocabulary is not None
-            else str(dataset_config.get("style_vocabulary", "canonical_v1"))
+            else str(dataset_config.get("style_vocabulary", "dsc"))
         ),
         music_by_clip=music_by_clip,
     )
