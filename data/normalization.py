@@ -82,7 +82,7 @@ class NormalizerBundle:
 
 
 def fit_normalizers(store: SequenceStore, clips: list[ClipRef]) -> NormalizerBundle:
-    """Fit legacy min/max statistics by scanning only referenced train frames."""
+    """Fit checkpoint-compatible min/max statistics from referenced train frames."""
 
     if not clips:
         raise ValueError("Cannot fit normalizers on an empty clip list")
@@ -90,7 +90,7 @@ def fit_normalizers(store: SequenceStore, clips: list[ClipRef]) -> NormalizerBun
     maxima: dict[str, np.ndarray] = {}
     for name, (_, field_slice) in NORMALIZER_FIELDS.items():
         width = field_slice.stop - field_slice.start
-        # Legacy windows always contain prefix padding at the first anchor.
+        # The first window always contains prefix padding.
         minima[name] = np.zeros(width, dtype=np.float32)
         maxima[name] = np.zeros(width, dtype=np.float32)
 
@@ -102,4 +102,3 @@ def fit_normalizers(store: SequenceStore, clips: list[ClipRef]) -> NormalizerBun
     return NormalizerBundle(
         {name: MinMaxStats(minima[name], maxima[name]) for name in NORMALIZER_FIELDS}
     )
-

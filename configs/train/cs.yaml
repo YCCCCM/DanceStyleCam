@@ -5,12 +5,12 @@ experiment:
 data:
   config: configs/data/dcm_style_pp.yaml
   split: train
-  style_vocabulary: legacy_dsc_v1
+  style_vocabulary: dsc
 
 model:
   stage: cs
   camera_format: polar
-  style_vocabulary: legacy_dsc_v1
+  style_vocabulary: dsc
   history_len: 60
   inference_len: 60
   latent_dim: 512
@@ -27,7 +27,7 @@ training:
   batch_size: 128
   num_workers: 8
   drop_last: true
-  learning_rate: 0.0002
+  learning_rate: 0.0004
   weight_decay: 0.02
   ema_decay: 0.9999
   ema_interval: 1

@@ -70,11 +70,16 @@ def load_model_weights(
 
 def normalizers_from_checkpoint(checkpoint: dict[str, Any]) -> NormalizerBundle:
     if "normalizers" in checkpoint:
+        def as_numpy(value: Any) -> np.ndarray:
+            if isinstance(value, torch.Tensor):
+                return value.detach().cpu().numpy().astype(np.float32, copy=False)
+            return np.asarray(value, dtype=np.float32)
+
         return NormalizerBundle(
             {
                 name: MinMaxStats(
-                    np.asarray(values["minimum"], dtype=np.float32),
-                    np.asarray(values["maximum"], dtype=np.float32),
+                    as_numpy(values["minimum"]),
+                    as_numpy(values["maximum"]),
                 )
                 for name, values in checkpoint["normalizers"].items()
             }
@@ -100,4 +105,3 @@ def normalizers_from_checkpoint(checkpoint: dict[str, Any]) -> NormalizerBundle:
     if "pose" not in fields:
         raise ValueError("Checkpoint does not contain pose normalization statistics")
     return NormalizerBundle(fields)
-

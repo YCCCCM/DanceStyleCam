@@ -19,7 +19,6 @@ class ArraySpec:
 ARRAY_SPECS = {
     "motion180": ArraySpec("motion180", (180,), "float32"),
     "camera20": ArraySpec("camera20", (20,), "float32"),
-    "music35": ArraySpec("music35", (35,), "float32"),
     "keyframe_mask": ArraySpec("keyframe_mask", (), "uint8"),
     "bone_mask60": ArraySpec("bone_mask60", (60,), "uint8"),
 }
@@ -47,8 +46,8 @@ CAMERA20_FIELDS = (
     "axis_z_z",
 )
 
-# This is the only style-to-index order used by new checkpoints.
-STYLE_NAMES_CANONICAL_V1 = (
+# This is the only style-to-index order used by DSC checkpoints.
+STYLE_NAMES_DSC = (
     "Breaking",
     "Popping",
     "Locking",
@@ -58,12 +57,11 @@ STYLE_NAMES_CANONICAL_V1 = (
     "Tai",
     "Uighur",
     "Hmong",
+    "Korean",
+    "Choreography",
+    "Chinese",
     "HanTang",
     "ShenYun",
     "Kun",
     "DunHuang",
-    "Korean",
-    "Choreography",
-    "Chinese",
 )
-

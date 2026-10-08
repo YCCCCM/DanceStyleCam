@@ -18,7 +18,7 @@ import numpy as np
 
 from common.config import load_config, require_mapping
 from common.paths import DatasetPaths
-from data.audio_features import extract_music35_clip
+from data.audio_features import extract_music35
 from data.raw_dcm import RawDCM
 from data.splits import load_segment_ranges
 from data.store import SequenceStore
@@ -133,7 +133,7 @@ def compare_legacy(config: dict[str, Any], legacy_root: Path, split_names: list[
                 if files.aligned_audio is not None
                 else int(store.load_manifest()["sequences"][sequence_id]["aligned_frame_limit"])
             )
-            clip_music = extract_music35_clip(
+            clip_music = extract_music35(
                 files.audio,
                 start,
                 audio_end,

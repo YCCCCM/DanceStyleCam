@@ -37,17 +37,16 @@ The train and inference example build this repo was validated on:
 
 ## Data preparation
 
+The default non-overlapping split uses `train.json` for training,
+`validation.json` for validation, and `test.json` for testing.
+
 ### Download DCM Dataset and prepare for DanceStyleCam
 * Download and Check the DCM dataset.
 * Put ```music_style_16cat.json``` in ```DCM_data``` and ```DCM_data/split```,
 * Preprocess the data by running code.
 ```bash
 python tools/data/prepare_dcm_style_pp.py --config configs/data/dcm_style_pp.yaml
-```
-
-* Make DCM++ dataset which is keyframe-aware by running
-```bash
-python tools/data/prepare_dcm_style_pp.py --config configs/data/dcm_style_pp.yaml
+python tools/data/prepare_music_features.py --config configs/data/dcm_style_pp.yaml --source <existing-DCM++-root> --extract-missing
 ```
 
 The dataset file structure is as follows:
@@ -64,7 +63,7 @@ DanceStyleCam
 │   │   ├──music_style_16cat.json
 │   │   ├──...
 │   └── music_style_16cat.json
-└── DCM++
+└── DCM-style++
 ```
 
 ## Model Test
@@ -88,6 +87,8 @@ python infer/generate_custom.py --config configs/infer/custom.yaml --dance input
 Control file formats are documented in [docs/CONTROLLABLE_INFERENCE.md](docs/CONTROLLABLE_INFERENCE.md).
 
 ## Evaluate
+
+The default benchmark uses the 43 original DCA test fragments listed in `DCM_data/split/test.json`.
 * Evaluation of quantitative results of synthesis and quantitative results of style consistency
 ```.bash
 python tools/eval/run_benchmark.py --config configs/eval/benchmark.yaml --input generation/<run-name>

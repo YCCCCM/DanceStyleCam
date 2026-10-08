@@ -59,7 +59,7 @@ def train(config: dict[str, Any]) -> Path:
     model = build_ckd_model(config)
     optimizer = Adan(
         model.parameters(),
-        lr=float(training.get("learning_rate", 2e-4)),
+        lr=float(training.get("learning_rate", 4e-4)),
         weight_decay=float(training.get("weight_decay", 0.02)),
     )
     ema = ExponentialMovingAverage(model, float(training.get("ema_decay", 0.9999)))
@@ -84,7 +84,7 @@ def train(config: dict[str, Any]) -> Path:
     )
     loss_fn = torch.nn.CrossEntropyLoss(weight=class_weights, reduction="none")
     history = int(require_mapping(config, "model").get("history_len", 60))
-    epochs = int(training.get("epochs", 1500))
+    epochs = int(training.get("epochs", 3000))
     ema_interval = int(training.get("ema_interval", 1))
     save_every = int(training.get("save_every", 300))
     max_steps = training.get("max_steps_per_epoch")

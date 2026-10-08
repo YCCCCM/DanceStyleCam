@@ -34,12 +34,13 @@ workflow.
 
 - `DCM_data/` remains the unmodified public DCM layout from DanceCamAnimator-Official.
 - `DCM_data/music_style_16cat.json` is the only style annotation source.
-- The default split files are `DCM_data/split/train_pre.json` and `DCM_data/split/test_pre.json`.
-- `DCM-style++/` stores one NPY file per complete source sequence for motion, camera, music,
+- The default non-overlapping splits are `DCM_data/split/train.json`,
+  `DCM_data/split/validation.json`, and `DCM_data/split/test.json`.
+- `DCM-style++/` stores one NPY file per complete source sequence for motion, camera,
   keyframe mask and bone mask, plus a small manifest and checksums.
-- The stored `music35` NPY is the full-sequence representation. The default
-  `dataset.music_feature_mode: legacy_clip` computes clip-local music features from `DCM_data`
-  audio in memory, matching the legacy cut-WAV-then-extract behavior without writing split caches.
+- `music35/clips/` stores fixed, clip-local music features for active JSON splits. Preparation
+  imports DCM++ `aist_feats_long` when available and extracts only missing clips; training and
+  inference read only NPY.
 - Split selection and train/test virtual clips are resolved at runtime from JSON. Changing a split
   does not rebuild or duplicate the processed NPY arrays.
 - The processed manifest must not embed mutable split or style assignments.
@@ -100,6 +101,7 @@ under `generation/`.
 
 ```bash
 python tools/data/prepare_dcm_style_pp.py --config configs/data/dcm_style_pp.yaml
+python tools/data/prepare_music_features.py --config configs/data/dcm_style_pp.yaml
 python tools/data/validate_dcm_style_pp.py --config configs/data/dcm_style_pp.yaml
 python train/train_ckd.py --config configs/train/ckd.yaml
 python train/train_cs.py --config configs/train/cs.yaml

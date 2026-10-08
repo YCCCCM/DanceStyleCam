@@ -1,4 +1,4 @@
-"""Legacy-compatible camera interpolation and geometric feature extraction."""
+"""DCM-compatible camera interpolation and geometric feature extraction."""
 
 from __future__ import annotations
 
@@ -189,4 +189,3 @@ def detect_bone_mask(camera20: np.ndarray, motion180: np.ndarray) -> np.ndarray:
     visible_y = cosine_yz >= cosine_fov * np.linalg.norm(projected_yz, axis=-1)
     visible_x = cosine_xz >= cosine_fov * np.linalg.norm(projected_xz, axis=-1)
     return np.logical_and(visible_y, visible_x).T.astype(np.uint8)
-

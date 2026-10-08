@@ -16,6 +16,12 @@ DCM-style++/*
 !DCM-style++/README.md
 runs/*
 !runs/README.md
+runs_all_stage1/
+runs_all_stage2_nogan/
+runs_half_stage1/
+runs_half_stage2_nogan/
+runs_trainplus_testhalf_stage1/
+runs_trainplus_testhalf_stage2_nogan/
 generation/*
 !generation/README.md
 checkpoints/*

@@ -50,6 +50,17 @@ def checkpoint_uses_ema(generation: Mapping[str, Any]) -> bool:
     return source == "ema"
 
 
+def ckd_normalizers_for_inference(
+    checkpoint: dict[str, Any], generation: Mapping[str, Any]
+) -> NormalizerBundle | None:
+    source = str(generation.get("ckd_normalization", "dataset")).lower()
+    if source == "dataset":
+        return None
+    if source == "checkpoint":
+        return normalizers_from_checkpoint(checkpoint)
+    raise ValueError("generation.ckd_normalization must be either `dataset` or `checkpoint`")
+
+
 def _tensor(value: Any, device: torch.device, dtype: torch.dtype | None = None) -> torch.Tensor:
     result = torch.as_tensor(value, device=device)
     if dtype is not None:
@@ -165,7 +176,7 @@ def run_generation(
     ckd_checkpoint = load_checkpoint_file(resolve_project_path(str(checkpoint_paths["ckd"])), device)
     ckd_model = build_ckd_model(config).to(device)
     load_model_weights(ckd_model, ckd_checkpoint, use_ema=use_ema, strict=True)
-    ckd_normalizers = normalizers_from_checkpoint(ckd_checkpoint)
+    ckd_normalizers = ckd_normalizers_for_inference(ckd_checkpoint, generation)
     ckd_dataset = build_ckd_dataset(data_config, split, normalizers=ckd_normalizers)
     keyframes = infer_keyframes(ckd_model, ckd_dataset, device, selected)
     del ckd_model, ckd_checkpoint
@@ -181,7 +192,7 @@ def run_generation(
         split,
         normalizers=cs_normalizers,
         generated_keyframe_masks=keyframes,
-        style_vocabulary=str(generation.get("checkpoint_style_vocabulary", "legacy_dsc_v1")),
+        style_vocabulary=str(generation.get("checkpoint_style_vocabulary", "dsc")),
     )
     cameras = infer_cameras(cs_model, cs_dataset, device, selected)
 

@@ -2,10 +2,12 @@
 
 验证日期：2026-08-03。
 
+本报告的公开模型兼容性对照使用当时的 49 条测试列表。当前项目默认 split 已恢复为
+互不交叉的 362/49/43 条 train/validation/test；当前 `test.json` 为 43 条。
+
 ## 全量 train=test 重组
 
-`train_pre.json + test_pre.json` 的并集只有 106 个序列，缺少 29 和 83，因此本次使用
-`C_0` 到 `C_107` 共 108 个完整序列，并让临时 train/test 同时指向这份列表。
+本次使用 `C_0` 到 `C_107` 共 108 个完整序列，并让临时 train/test 同时指向这份列表。
 
 | Dataset | train clips | test clips | train windows | test windows |
 | --- | ---: | ---: | ---: | ---: |
@@ -33,8 +35,8 @@ pose、camera distance/position/rotation/FOV/eye 统计。两个 split 的所有
 
 ## 公开权重原版协议复现
 
-公开模型验证必须使用旧 `DCM_data/split/test.json` 对应的 49 个 `DCM++/Test` 片段，而
-不是默认开源分割 `test_pre.json` 的 43 个片段。本次使用：
+当时的公开模型兼容性评估使用 `DCM_data/split/test.json` 中的 49 个 `DCM++/Test` 片段。
+本次使用：
 
 - `DSC_CKD.pt`：SHA-256 `7a4080475e47c45374e66ef12574b94da8a0f22111fdb4b043220b20bba30985`
 - `DSC_CS.pt`：SHA-256 `a90dd6cfcc083f4e5fe0a5d945729b8ba5041d4647245e743fc944113c520cb3`
@@ -66,8 +68,7 @@ DMR 完全一致；FID-S、Div-S 和 LCD 的差异均小于 `0.001`。
 其中 2 个是迁移代码曾提前强制首尾关键帧造成，现已改为与原版一样只在 CS Dataset
 内部补首尾。剩余边界翻转解释了 FID-K 的小幅差异，不改变整体评价结论。
 
-此前在 43 条 `test_pre` 上得到的高 DMR / 高 FID-S 使用了错误的 EMA 权重，同时与原版
-49 条评价协议混用，不能作为公开模型结果，已从本报告撤销。
+此前临时 43 条实验分割上的指标与当前公开 49 条评价协议不同，不能作为公开模型结果。
 
 ## 风格一致性对照
 

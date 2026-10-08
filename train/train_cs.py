@@ -73,7 +73,7 @@ def train(config: dict[str, Any]) -> Path:
     use_gan = bool(training.get("use_gan", True))
     data_section = require_mapping(config, "data")
     data_config = load_data_config(config)
-    style_vocabulary = str(data_section.get("style_vocabulary", "legacy_dsc_v1"))
+    style_vocabulary = str(data_section.get("style_vocabulary", "dsc"))
     accelerator.print("Building virtual CS windows and fitting train-split normalizers...")
     dataset = build_cs_dataset(data_config, "train", style_vocabulary=style_vocabulary)
     loader = DataLoader(
@@ -88,7 +88,7 @@ def train(config: dict[str, Any]) -> Path:
     model = build_cs_model(config)
     optimizer = Adan(
         model.parameters(),
-        lr=float(training.get("learning_rate", 2e-4)),
+        lr=float(training.get("learning_rate", 4e-4)),
         weight_decay=float(training.get("weight_decay", 0.02)),
     )
     ema = ExponentialMovingAverage(model, float(training.get("ema_decay", 0.9999)))

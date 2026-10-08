@@ -783,7 +783,7 @@ def run_custom_generation(
         raise ValueError("Optional config section `model` must be a mapping")
     history_len = int(model_config.get("history_len", 60))
     inference_len = int(model_config.get("inference_len", 60))
-    vocabulary = str(generation.get("checkpoint_style_vocabulary", "legacy_dsc_v1"))
+    vocabulary = str(generation.get("checkpoint_style_vocabulary", "dsc"))
     style = validate_style(style, vocabulary)
     dance = resolve_project_path(dance_path)
     music = resolve_project_path(music_path)
@@ -803,7 +803,13 @@ def run_custom_generation(
     motion180 = load_motion180(dance, pmx, frames=requested_frames)
     frames = min(len(motion180), requested_frames)
     motion180 = motion180[:frames]
-    music35 = extract_music35(music, aligned_frame_limit=frames, output_frames=frames)
+    music35 = extract_music35(
+        music,
+        start_frame=0,
+        end_frame=None,
+        output_frames=frames,
+        aligned_frame_limit=frames,
+    )
     frames_by_sample = {sample_id: frames}
     temporal = load_temporal_controls(temporal_control, frames_by_sample)
     spatial = load_spatio_temporal_controls(spatio_temporal_control, frames_by_sample)
