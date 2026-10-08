@@ -122,22 +122,33 @@ python tools/visualization/visualize.py --config configs/visualization/default.y
 ```
 
 ### Visualization II
-* If you want to experience better visualization, convert the results to `.vmd` format that can be viewed in [Saba_Viewer] by running
+* If you want to experience better visualization, convert the results to `.vmd` format that can be viewed in [Saba_Viewer](https://github.com/Carmenw1203/DanceCamera3D-Official) by running
 
 ```.bash
 python tools/visualization/export_vmd.py --input generation/<run-name>
 ```
 
-# Citation 
-If you think this project is helpful, please cite our paper:
+# Citation
+
+If you find this project helpful, please cite our paper. The paper is available in the [IJCAI 2026 proceedings](https://www.ijcai.org/proceedings/2026/136) and can also be found on [Google Scholar](https://scholar.google.com/scholar?q=DanceStyleCam%3A+Style-Based+3D+Multi-Style+Dance+Camera+Movement+Synthesis).
+
 ```bibtex
-@inproceedings{huang2026dsc,
-  title={DanceStyleCam: Style-Based 3D Multi-Style Dance Camera Movement Synthesis},
-  author={Xiaoying Huang},
-  booktitle={2026 IJCAI},
-  year={2026},
+@inproceedings{ijcai2026p136,
+  title     = {DanceStyleCam: Style-Based 3D Multi-Style Dance Camera Movement Synthesis},
+  author    = {Huang, Xiaoying and Zhang, Sanyi and Wang, Xirui and Zhang, Qin and Ye, Long},
+  booktitle = {Proceedings of the Thirty-Fifth International Joint Conference on
+               Artificial Intelligence, {IJCAI-26}},
+  publisher = {International Joint Conferences on Artificial Intelligence Organization},
+  editor    = {Diego Calvanese},
+  pages     = {1215--1223},
+  year      = {2026},
+  month     = {8},
+  note      = {Main Track},
+  doi       = {10.24963/ijcai.2026/136},
+  url       = {https://doi.org/10.24963/ijcai.2026/136},
 }
-``` 
+```
 
 # Acknowledgements
-Thank you for reviewing my manuscript.
+
+We thank the authors of [DanceCamAnimator (DCA)](https://github.com/Carmenw1203/DanceCamAnimator-Official) and [DanceCamera3D (DC3D)](https://github.com/Carmenw1203/DanceCamera3D-Official) for sharing their code and resources with the community.
