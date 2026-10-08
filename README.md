@@ -67,8 +67,17 @@ DanceStyleCam
 ```
 
 ## Model Test
-* Contact the first author to obtain a link to download our trained checkpoints.
-* Put the downloaded checkpoints under `checkpoints` folder and rename them as `DSC_CKD.pt` and `DSC_CS.pt`.
+* Download the trained checkpoints: [DSC.zip (Google Drive)](https://drive.google.com/file/d/1wY15Nd_JcbdDYkBVOHNc94Fu5gBvR36T/view?usp=sharing).
+* Extract `DSC.zip` into the `checkpoints/` folder, keeping the original filenames:
+
+```text
+checkpoints/
+├── DSC_CKD.pt
+├── DSC_CS.pt
+└── DSC_CS_v2.pt
+```
+
+* The default inference configuration, `configs/infer/default.yaml`, uses `DSC_CKD.pt` and `DSC_CS.pt`.
 * synthesis keyframe information with CKD model by running
 ```.bash
 python infer/generate.py --config configs/infer/default.yaml
